@@ -1,6 +1,9 @@
 "use client"
+import { Suspense, lazy } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import GameSection from "@/components/game-section"
+
+// Lazy load GameSection to improve performance
+const GameSection = lazy(() => import("@/components/game-section"))
 
 const games = ["Valorant", "CS2", "Dota 2", "LoL", "PUBG"]
 
@@ -120,7 +123,13 @@ export default function GameTabs() {
 
       {games.map((game) => (
         <TabsContent key={game} value={game} className="space-y-6">
-          <GameSection game={game} tournaments={mockTournaments[game as keyof typeof mockTournaments]} />
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-12">
+              <div className="text-blue-400">Loading {game} data...</div>
+            </div>
+          }>
+            <GameSection game={game} tournaments={mockTournaments[game as keyof typeof mockTournaments]} />
+          </Suspense>
         </TabsContent>
       ))}
     </Tabs>

@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { MongoClient } from "mongodb";
 import OpenAI from "openai";
 import cors from "cors";
+import axios from "axios";
 import Analysis from "./models/analysisModel.js";
 import News from "./models/newsModel.js";
 
@@ -12,7 +13,17 @@ dotenv.config();
 // Initialize app
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// Configure CORS for production
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? process.env.FRONTEND_URL || 'https://esportsai.vercel.app'
+    : 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
 
 // Initialize OpenAI with your API key
 const openai = new OpenAI({
@@ -59,7 +70,7 @@ app.post("/analyze", async (req, res) => {
         {
           role: "system",
           content:
-            "You are an expert esports data analyst who provides insights on teams, players, and tournaments.",
+            "You are an expert esports data analyst. IMPORTANT: Respond ONLY in plain text. Do NOT use ANY markdown formatting whatsoever - no **bold**, no ## headers, no *italics*, no ---, no lists with -, no numbered lists with numbers. Just write normal paragraphs and sentences like regular text. Keep responses clear and readable.",
         },
         {
           role: "user",
@@ -110,7 +121,7 @@ app.post('/api/ai-analyze-news', async (req, res) => {
       `${index + 1}. ${article.description || 'No description'}`
     ).join('\n\n');
 
-    const prompt = `You are an esports industry analyst. Analyze these recent esports news articles and provide insights:
+    const prompt = `You are an esports industry analyst. Analyze these recent esports news articles and provide insights in plain text without using any markdown formatting like **, ##, or special characters.
 
 ARTICLES:
 ${articleTitles}
@@ -119,13 +130,13 @@ DETAILED CONTENT:
 ${articleDescriptions}
 
 Please provide:
-1. **Top Trends**: Identify the 3-5 most significant trends or themes emerging from these articles
-2. **Sentiment Analysis**: Overall sentiment (positive/negative/neutral) and key emotional drivers
-3. **Impact Assessment**: Which games/teams/players are most affected by current news
-4. **Future Outlook**: What these trends suggest about the esports landscape in the coming weeks
-5. **Key Takeaways**: 2-3 actionable insights for esports enthusiasts or professionals
+1. Top Trends: Identify the 3-5 most significant trends or themes emerging from these articles
+2. Sentiment Analysis: Overall sentiment (positive/negative/neutral) and key emotional drivers
+3. Impact Assessment: Which games/teams/players are most affected by current news
+4. Future Outlook: What these trends suggest about the esports landscape in the coming weeks
+5. Key Takeaways: 2-3 actionable insights for esports enthusiasts or professionals
 
-Keep your analysis concise but insightful, focusing on data-driven observations.`;
+Keep your analysis concise but insightful, focusing on data-driven observations. Respond in plain text only.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -264,41 +275,18 @@ app.get('/api/games', async (req, res) => {
 
 app.get('/api/news', async (req, res) => {
   const NEWS_API_KEY = process.env.NEWS_API_KEY;
-  const ESPN_ESPORTS_URL = 'https://site.api.espn.com/apis/site/v2/sports/esports';
 
   try {
-    // Try ESPN Esports API first
-    try {
-      const espnResponse = await axios.get(ESPN_ESPORTS_URL, {
-        timeout: 5000
-      });
-
-      if (espnResponse.data && espnResponse.data.articles) {
-        const articles = espnResponse.data.articles.slice(0, 10).map((article, index) => ({
-          id: index + 1,
-          title: article.headline || 'No title available',
-          description: article.description || article.headline || 'No description available',
-          source: 'ESPN Esports',
-          url: article.links?.web?.href || article.link || '#',
-          image: article.images?.[0]?.url || null,
-          publishedAt: article.published || new Date().toISOString()
-        }));
-
-        return res.json({ news: articles });
-      }
-    } catch (espnError) {
-      console.log('ESPN API failed, falling back to NewsAPI');
-    }
-
-    // Fallback to NewsAPI if ESPN fails
+    // Use NewsAPI directly (ESPN API requires authentication and may not be publicly available)
     if (NEWS_API_KEY) {
       const newsApiUrl = `https://newsapi.org/v2/everything?q=esports+OR+gaming+OR+"league+of+legends"+OR+"counter+strike"+OR+valorant+OR+"dota+2"&sortBy=publishedAt&language=en&pageSize=10&apiKey=${NEWS_API_KEY}`;
 
+      console.log('Fetching news from NewsAPI...');
       const newsResponse = await axios.get(newsApiUrl, {
-        timeout: 5000
+        timeout: 10000
       });
 
-      if (newsResponse.data && newsResponse.data.articles) {
+      if (newsResponse.data && newsResponse.data.articles && newsResponse.data.articles.length > 0) {
         const articles = newsResponse.data.articles.map((article, index) => ({
           id: index + 1,
           title: article.title || 'No title available',
@@ -309,21 +297,26 @@ app.get('/api/news', async (req, res) => {
           publishedAt: article.publishedAt || new Date().toISOString()
         }));
 
+        console.log(`✅ Successfully fetched ${articles.length} news articles`);
         return res.json({ news: articles });
+      } else {
+        console.log('NewsAPI returned no articles');
       }
+    } else {
+      console.log('NewsAPI key not configured');
     }
   } catch (error) {
     console.error('News API error:', error.message);
   }
 
-  // If both APIs fail or error occurs, return cached/placeholder data
-  console.log('All news APIs failed, returning placeholder data');
+  // If API fails or no key, return placeholder data
+  console.log('News API failed, returning placeholder data');
   res.json({
     news: [
       {
         id: 1,
         title: 'Live Esports News Feed',
-        description: 'Real-time esports news updates will appear here. Configure API keys for live data.',
+        description: 'Real-time esports news updates will appear here. NewsAPI key is configured but API call failed.',
         source: 'EsportsAI',
         url: '#',
         image: null,

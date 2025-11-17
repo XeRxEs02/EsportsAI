@@ -1,3 +1,4 @@
+import { memo } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -140,7 +141,7 @@ const gameData = {
   }
 }
 
-export default function GameSection({ game, tournaments }: GameSectionProps) {
+function GameSection({ game, tournaments }: GameSectionProps) {
   const currentGameData = gameData[game as keyof typeof gameData];
 
   return (
@@ -252,3 +253,5 @@ export default function GameSection({ game, tournaments }: GameSectionProps) {
     </div>
   )
 }
+
+export default memo(GameSection)

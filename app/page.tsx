@@ -19,7 +19,7 @@ export default function Home() {
 
   // Test backend connectivity
   useEffect(() => {
-    fetch('http://localhost:5000/api/ping')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ping`)
       .then(res => res.json())
       .then(data => console.log('✅ Backend Response:', data))
       .catch(err => console.error('❌ Backend not reachable:', err));
@@ -30,7 +30,7 @@ export default function Home() {
 
   // Fetch news data with SWR - refresh every 60 seconds
   const { data: newsResponse, error, isLoading, mutate } = useSWR(
-    'http://localhost:5000/api/news',
+    `${process.env.NEXT_PUBLIC_API_URL}/api/news`,
     fetcher,
     {
       refreshInterval: 60000, // 60 seconds
@@ -101,7 +101,7 @@ export default function Home() {
         description: article.description || 'No description available'
       })) || [];
 
-      const response = await fetch('http://localhost:5000/api/ai-analyze-news', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ai-analyze-news`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export default function Home() {
               <Link href="/insights">
                 <Button size="sm" className="h-8 px-2 sm:px-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xs sm:text-sm">
                   <div className="h-3 w-3 sm:h-4 sm:w-4 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">📊</span>
+                    <span className="text-white font-bold text-xs">�</span>
                   </div>
                   <span className="ml-1.5 hidden sm:inline">AI Insights</span>
                 </Button>
@@ -275,17 +275,8 @@ export default function Home() {
             <CardContent className="pt-4">
               {aiAnalysis ? (
                 <div className="max-h-96 lg:max-h-[500px] overflow-y-auto">
-                  <div className="prose prose-invert prose-sm max-w-none">
-                    <div
-                      className="text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base"
-                      dangerouslySetInnerHTML={{
-                        __html: aiAnalysis.replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-400">$1</strong>')
-                          .replace(/^### (.*$)/gim, '<h3 class="text-blue-300 text-base sm:text-lg font-semibold mt-4 mb-2">$1</h3>')
-                          .replace(/^## (.*$)/gim, '<h2 class="text-blue-200 text-lg sm:text-xl font-semibold mt-6 mb-3">$1</h2>')
-                          .replace(/^# (.*$)/gim, '<h1 class="text-blue-100 text-xl sm:text-2xl font-bold mt-8 mb-4">$1</h1>')
-                          .replace(/^(\d+\.)/gm, '<br/><strong class="text-blue-400">$1</strong>')
-                      }}
-                    />
+                  <div className="text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                    {aiAnalysis}
                   </div>
                 </div>
               ) : (

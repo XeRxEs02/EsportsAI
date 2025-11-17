@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function InsightsPage() {
-  const { data, error } = useSWR("http://localhost:5000/api/insights", fetcher, {
+  const { data, error } = useSWR(`${process.env.NEXT_PUBLIC_API_URL}/api/insights`, fetcher, {
     refreshInterval: 60000,
   });
 
@@ -46,7 +46,7 @@ export default function InsightsPage() {
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 max-w-5xl">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-400 mb-4">
-            📊 EsportsAI Insights Dashboard
+            EsportsAI Insights Dashboard
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto">
             Historical AI analysis of esports trends, sentiment, and market intelligence
@@ -67,7 +67,7 @@ export default function InsightsPage() {
                   AI Analysis
                 </span>
               </div>
-              <p className="font-semibold text-base sm:text-lg lg:text-xl mb-4 text-white">🧠 {item.query}</p>
+              <p className="font-semibold text-base sm:text-lg lg:text-xl mb-4 text-white">{item.query}</p>
               <div className="text-slate-200 whitespace-pre-wrap leading-relaxed text-sm sm:text-base max-h-64 sm:max-h-80 lg:max-h-96 overflow-y-auto bg-slate-800/20 rounded-lg p-3 sm:p-4">
                 {item.answer}
               </div>
@@ -76,7 +76,7 @@ export default function InsightsPage() {
 
           {data.insights.length === 0 && (
             <div className="text-center py-16 sm:py-24">
-              <div className="text-4xl sm:text-6xl lg:text-8xl mb-6">📊</div>
+              <div className="text-4xl sm:text-6xl lg:text-8xl mb-6">📈</div>
               <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-slate-300 mb-4">No AI Analyses Yet</h3>
               <p className="text-sm sm:text-base lg:text-lg text-slate-400 max-w-md mx-auto">
                 Start asking questions on the AI Query page to see your analysis history here.

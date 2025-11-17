@@ -17,7 +17,7 @@ export default function EsportsAIDashboard() {
     setResponse("");
 
     try {
-      const res = await fetch("http://localhost:5000/analyze", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query }),
@@ -30,7 +30,7 @@ export default function EsportsAIDashboard() {
         setResponse("Error: " + data.error);
       }
     } catch (err) {
-      setResponse("❌ Failed to connect to backend.");
+      setResponse("Failed to connect to backend.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -68,10 +68,10 @@ export default function EsportsAIDashboard() {
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 max-w-4xl">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-400 mb-4">
-            🎮 EsportsAI Intelligence
+            EsportsAI Intelligence
           </h1>
           <p className="text-sm sm:text-base lg:text-lg text-slate-300 max-w-2xl mx-auto">
-            Ask about esports trends, players, or tournaments — powered by AI ⚡
+            Ask about esports trends, players, or tournaments — powered by AI
           </p>
         </div>
 
@@ -101,7 +101,7 @@ export default function EsportsAIDashboard() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-lg">🧠</span>
+                  <span className="text-lg">🤖</span>
                   Analyze with AI
                 </div>
               )}
